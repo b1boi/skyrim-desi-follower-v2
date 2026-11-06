@@ -32,7 +32,10 @@ wheels/
 venv/
 ENV/
 
-# Testing & Logs
+# Runtime & Temporary Data
+run/
+.python/
+
 .pytest_cache/
 .coverage
 htmlcov/

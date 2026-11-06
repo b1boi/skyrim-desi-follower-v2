@@ -1,0 +1,218 @@
+diff --git a/custom_user_folder.ini b/custom_user_folder.ini
+index bcaba09..1666a82 100644
+--- a/custom_user_folder.ini
++++ b/custom_user_folder.ini
+@@ -2,4 +2,4 @@
+ ; custom_user_folder
+ ;   Acts as an override to the default Mantella user folder in '../Documents/My Games/Mantella/'
+ ;   Use this in case the default path to the user folder of Mantella is inaccessible
+-custom_user_folder =
+\ No newline at end of file
++custom_user_folder = /home/bepis/git/skyrim-desi-follower-v2/run/mantella_user
+\ No newline at end of file
+diff --git a/main.py b/main.py
+index 923155e..590442c 100644
+--- a/main.py
++++ b/main.py
+@@ -1,19 +1,20 @@
++import os
+ import onnxruntime # Ensure onnxruntime is imported before anything else to avoid pyinstaller DLL load issues
+ from src.http.http_server import http_server
+ import traceback
+ from src.http.routes.routeable import routeable
+ from src.http.routes.mantella_route import mantella_route
+ from src.setup import MantellaSetup
+-from src.ui.start_ui import StartUI
+ import src.utils as utils
+ 
+ def main():
++    logger = utils.get_logger()
+     try:
+         mantella_version = '0.14'
+         config, language_info = MantellaSetup().initialise(
+             config_file='config.ini',
+             logging_file='logging.log', 
+-            language_file='data/language_support.csv',
++            language_file=os.path.join(utils.resolve_path(), 'data', 'language_support.csv'),
+             mantella_version=mantella_version)
+ 
+         logger = utils.get_logger()
+@@ -26,8 +27,13 @@ def main():
+             config=config,
+             language_info=language_info,
+         )
+-        ui = StartUI(config)
+-        routes: list[routeable] = [conversation, ui]
++        routes: list[routeable] = [conversation]
++        try:
++            from src.ui.start_ui import StartUI
++            ui = StartUI(config)
++            routes.append(ui)
++        except (ImportError, Exception) as e:
++            logger.info("StartUI skipped (headless mode): %s", e)
+         
+         mantella_http_server.start(int(config.port), routes, config.play_startup_sound, config.show_http_debug_messages)
+ 
+diff --git a/src/config/definitions/tts_definitions.py b/src/config/definitions/tts_definitions.py
+index 8aa77c4..72f9467 100644
+--- a/src/config/definitions/tts_definitions.py
++++ b/src/config/definitions/tts_definitions.py
+@@ -13,6 +13,7 @@ class TTSEnum(Enum):
+     PIPER = auto()
+     XTTS = auto()
+     XVASYNTH = auto()
++    STUB = auto()
+ 
+     @property
+     def display_name(self) -> str:
+@@ -20,6 +21,7 @@ class TTSEnum(Enum):
+             self.PIPER: 'Piper',
+             self.XTTS: 'XTTS',
+             self.XVASYNTH: 'xVASynth',
++            self.STUB: 'Stub',
+         }[self]
+ 
+ class TTSDefinitions:
+diff --git a/src/llm/llm_client.py b/src/llm/llm_client.py
+index 4006e4f..a6dfc68 100644
+--- a/src/llm/llm_client.py
++++ b/src/llm/llm_client.py
+@@ -29,7 +29,12 @@ class LLMClient(ClientBase):
+         else:
+             logger.log(23, f"Running Mantella with '{config.llm}'. The language model can be changed in the Mantella UI: http://localhost:4999/ui")
+ 
+-        self._startup_async_client: AsyncOpenAI | None = self.generate_async_client() # initialize first client in advance of sending first LLM request to save time
++        self._is_stub = str(config.llm_api).strip().lower() == 'stub' or str(config.llm).strip().lower() == 'stub'
++        if not self._is_stub:
++            self._startup_async_client: AsyncOpenAI | None = self.generate_async_client() # initialize first client in advance of sending first LLM request to save time
++        else:
++            self._startup_async_client = None
++            logger.info("Running Mantella with Stub language model (Phase 0 mock)")
+ 
+         if config.vision_enabled:
+             logger.info(f"Setting up vision language model...")
+@@ -43,3 +48,23 @@ class LLMClient(ClientBase):
+             except Exception as e:
+                 logger.error(f"Failed to initialize function calling LLM: {e}. Tool calling will be disabled.")
+                 self._function_client = None
++
++    @utils.time_it
++    async def streaming_call(self, messages, is_multi_npc: bool, tools: list[dict] = None):
++        if getattr(self, '_is_stub', False):
++            chunks = [
++                "Bhaiyo aur behno, Swagat hai! ",
++                "Sarkaar Bhaiya aapke saath hai. ",
++                "Skyrim ke maamle hum suljha lenge."
++            ]
++            for chunk in chunks:
++                yield ("content", chunk)
++            return
++        async for item in super().streaming_call(messages, is_multi_npc, tools):
++            yield item
++
++    @utils.time_it
++    def request_call(self, messages):
++        if getattr(self, '_is_stub', False):
++            return "Bhaiyo aur behno, Swagat hai! Sarkaar Bhaiya aapke saath hai."
++        return super().request_call(messages)
+diff --git a/src/setup.py b/src/setup.py
+index 041bb25..a11c6e3 100644
+--- a/src/setup.py
++++ b/src/setup.py
+@@ -52,14 +52,15 @@ Conversation histories, config.ini, and logging.log available in:
+         return self.config, self.language_info
+ 
+     def _set_cwd_to_exe_dir(self):
+-        '''Set the current working directory to the executable's directory if running as exe'''
++        '''Set the current working directory to the executable's or script's root directory'''
+         if getattr(sys, 'frozen', False): # if exe and not Python script
+-            # change the current working directory to the executable's directory
+             os.chdir(os.path.dirname(sys.executable))
++        else:
++            os.chdir(utils.resolve_path())
+ 
+     def _get_custom_user_folder(self) -> str:
+         '''Find Mantella's saved data folder from configuration file if it exists'''
+-        file_name = "custom_user_folder.ini"
++        file_name = os.path.join(utils.resolve_path(), "custom_user_folder.ini")
+         if not os.path.exists(file_name):
+             return ""
+ 
+diff --git a/src/tts/tts_factory.py b/src/tts/tts_factory.py
+index f9071d5..d061f92 100644
+--- a/src/tts/tts_factory.py
++++ b/src/tts/tts_factory.py
+@@ -4,6 +4,7 @@ from src.tts.ttsable import TTSable
+ from src.tts.piper import Piper
+ from src.tts.xtts import XTTS
+ from src.tts.xvasynth import xVASynth
++from src.tts.stub_tts import StubTTS
+ from src.games.gameable import Gameable
+ from src import utils
+ 
+@@ -13,6 +14,7 @@ _PARSE_MAPPING: dict[str, TTSEnum] = {
+     'piper': TTSEnum.PIPER,
+     'xtts': TTSEnum.XTTS,
+     'xvasynth': TTSEnum.XVASYNTH,
++    'stub': TTSEnum.STUB,
+ }
+ 
+ 
+@@ -40,4 +42,6 @@ def create_tts(service: TTSEnum, config: ConfigLoader, game: Gameable | None = N
+         return XTTS(config, game)
+     elif service == TTSEnum.XVASYNTH:
+         return xVASynth(config)
++    elif service == TTSEnum.STUB:
++        return StubTTS(config, game)
+     raise ValueError(f"Unknown TTS service: {service}")
+diff --git a/src/tts/ttsable.py b/src/tts/ttsable.py
+index b68f2c5..e21fe7b 100644
+--- a/src/tts/ttsable.py
++++ b/src/tts/ttsable.py
+@@ -204,7 +204,7 @@ class TTSable(ABC):
+                 #Using subprocess.run to retrieve the exit code
+                 args: str = f'"{LipGen_path}" "{wav_file}" "{voiceline}" -Language:{language_parm} -Automated'
+                 run_result: subprocess.CompletedProcess = subprocess.run(args, cwd=self._voiceline_folder, stderr=DEVNULL, stdout=DEVNULL,
+-                                                                         creationflags=subprocess.CREATE_NO_WINDOW)
++                                                                         creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+                 if run_result.returncode != 0 and len(voiceline) > 11 :
+                     #Very short sentences sometimes fail to generate a .lip file, so skip warning
+                     logger.warning(f'Lipgen returned {run_result.returncode}')
+@@ -250,7 +250,7 @@ class TTSable(ABC):
+             if os.path.exists(LipFuz_path):
+                 args: str = f'"{LipFuz_path}" -s "{self._voiceline_folder}" -d "{self._voiceline_folder}" -a wav --norec'
+                 run_result: subprocess.CompletedProcess = subprocess.run(args, cwd=self._voiceline_folder, stdout=DEVNULL, stderr=DEVNULL,
+-                                                                         creationflags=subprocess.CREATE_NO_WINDOW)
++                                                                         creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+                 if run_result.returncode != 0:
+                     logger.warning(f'LipFuzer returned {run_result.returncode}')
+             else:
+@@ -292,7 +292,11 @@ class TTSable(ABC):
+             lip_file: str = wav_file.replace(".wav", ".lip")
+             
+             if not skip_lip_generation:
+-                generate_facefx_lip_file(self._facefx_path, wav_file, lip_file, voiceline, self._game.base_game.display_name)
++                try:
++                    generate_facefx_lip_file(self._facefx_path, wav_file, lip_file, voiceline, self._game.base_game.display_name)
++                except Exception as ex:
++                    logger.warning(f"Lip generation failed ({ex}), using placeholder lip file instead.")
++                    copy_placeholder_lip_file(lip_file, self._game.base_game.display_name)
+             else:
+                 copy_placeholder_lip_file(lip_file, self._game.base_game.display_name)
+             
+diff --git a/src/utils.py b/src/utils.py
+index a9cc89f..c6f61f7 100644
+--- a/src/utils.py
++++ b/src/utils.py
+@@ -384,8 +384,10 @@ def resolve_service_endpoint(value: str) -> str:
+ 
+ 
+ def is_local_url(url: str) -> bool:
++    if url.lower() in ('stub', 'localhost', '127.0.0.1'):
++        return True
+     domain = urlparse(url).netloc
+-    return domain.startswith("10.") or domain.startswith("127.") or domain.startswith("192.168") or domain.startswith("172.")
++    return domain.startswith("10.") or domain.startswith("127.") or domain.startswith("192.168") or domain.startswith("172.") or domain.startswith("localhost")
+ 
+ 
+ def get_model_token_limits():
