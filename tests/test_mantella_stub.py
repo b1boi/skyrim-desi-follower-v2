@@ -116,3 +116,4 @@ def test_mantella_conversation_flow(api_client):
     })
     assert res_end.status_code == 200
     assert res_end.json().get(c.KEY_REPLYTYPE) == c.KEY_REPLYTYPE_ENDCONVERSATION
+

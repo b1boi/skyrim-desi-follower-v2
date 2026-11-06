@@ -8,3 +8,4 @@ export PYTHONPATH="${REPO_ROOT}/upstream/Mantella:${PYTHONPATH:-}"
 
 echo "[INFO] Starting native Mantella server on Linux..."
 exec "${REPO_ROOT}/.venv/bin/python" "${REPO_ROOT}/upstream/Mantella/main.py" "$@"
+

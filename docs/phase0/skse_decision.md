@@ -125,3 +125,4 @@ If Address Library v13 or SKSE 2.3.1 fails to load the necessary DLLs:
      chmod 444 /home/bepis/.local/share/Steam/steamapps/appmanifest_489830.acf
      ```
    - Only launch Skyrim via `skse64_loader.exe`, never through the standard Steam Play button.
+

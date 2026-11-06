@@ -279,3 +279,4 @@ class TurnTracer:
                 f.write(turn.to_json() + "\n")
 
         return turn
+
