@@ -65,3 +65,4 @@ This report documents the exact hardware, driver, kernel, Proton, and Skyrim con
 
 3. **SKSE Status**:
    - The game currently lacks SKSE. The executable version is `1.7.104.0`. SKSE64 matching this build is required for in-game execution.
+

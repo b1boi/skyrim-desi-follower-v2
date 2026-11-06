@@ -252,3 +252,4 @@ Evaluating the hypotheses and claims in Section 3 & 4 of the design brief agains
 5. **Claim: "Linux compatibility: Mantella's current installation documentation lists Windows 10/11 requirements and does not establish Linux compatibility."**
    - **Verdict: VERIFIED & PINPOINTED**.
    - *Evidence*: The Python backend core (`FastAPI`, `requests`, `uvicorn`, `numpy`) runs flawlessly on Linux. The Windows-only blockers in the code are strictly: (1) `win32gui` in `image_manager.py`, (2) `ctypes.windll.user32` in `ptt_controller.py`, and (3) `FaceFXWrapper.exe` for lip sync. All three can be excised or safely bypassed on Linux.
+

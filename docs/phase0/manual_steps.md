@@ -37,3 +37,4 @@ This document records the exact manual steps and inputs required from the user d
   2. A dialogue event reaches the native Python backend on `http://127.0.0.1:4999`.
   3. The fixed subtitle appears in-game.
   4. The generated WAV plays in-game on the NPC voice channel.
+
