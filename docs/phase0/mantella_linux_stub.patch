@@ -138,6 +138,43 @@ index 041bb25..a11c6e3 100644
          if not os.path.exists(file_name):
              return ""
  
+diff --git a/src/tts/stub_tts.py b/src/tts/stub_tts.py
+new file mode 100644
+index 0000000..948df6a
+--- /dev/null
++++ b/src/tts/stub_tts.py
+@@ -0,0 +1,31 @@
++import os
++import numpy as np
++import soundfile as sf
++from src.tts.ttsable import TTSable
++from src.tts.synthesization_options import SynthesizationOptions
++from src.config.config_loader import ConfigLoader
++from src.games.gameable import Gameable
++from src import utils
++
++logger = utils.get_logger()
++
++
++class StubTTS(TTSable):
++    """Stub TTS implementation for testing without GPU/external server dependencies."""
++    def __init__(self, config: ConfigLoader, game: Gameable | None = None) -> None:
++        super().__init__(config)
++        self._last_voice = 'stub'
++
++    def change_voice(self, voice: str, in_game_voice: str | None = None, csv_in_game_voice: str | None = None, advanced_voice_model: str | None = None, voice_accent: str | None = None, voice_gender: int | None = None, voice_race: str | None = None):
++        self._last_voice = voice or 'stub'
++
++    def tts_synthesize(self, voiceline: str, final_voiceline_file: str, synth_options: SynthesizationOptions):
++        # Generate 1.0s 24kHz audio (subtle 440 Hz beep)
++        samplerate = 24000
++        duration = 1.0
++        t = np.linspace(0, duration, int(samplerate * duration), endpoint=False)
++        audio = 0.1 * np.sin(2 * np.pi * 440 * t)
++        os.makedirs(os.path.dirname(final_voiceline_file), exist_ok=True)
++        sf.write(final_voiceline_file, audio.astype(np.float32), samplerate)
++        logger.info(f"[StubTTS] Synthesized {duration}s stub audio at {final_voiceline_file} for: '{voiceline.strip()}'")
++
 diff --git a/src/tts/tts_factory.py b/src/tts/tts_factory.py
 index f9071d5..d061f92 100644
 --- a/src/tts/tts_factory.py
