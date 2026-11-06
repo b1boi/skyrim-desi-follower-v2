@@ -16,7 +16,7 @@ STAGED_DIFF=$(git diff --cached -U0 -- . ':(exclude)scripts/check_secrets.sh')
 
 if [ -n "$STAGED_DIFF" ]; then
     # Check for private keys
-    if echo "$STAGED_DIFF" | grep -E "^\+" | grep -E "BEGIN (RSA|OPENSSH|EC|DSA)? ?PRIVATE KEY" > /dev/null; then
+    if echo "$STAGED_DIFF" | grep -E '^\+' | grep -E "BEGIN (RSA|OPENSSH|EC|DSA)?[ ]?PRIVATE KEY" > /dev/null 2>&1; then
         echo "ERROR: Possible private key detected in staged changes."
         exit 1
     fi
@@ -24,7 +24,7 @@ if [ -n "$STAGED_DIFF" ]; then
     # Patterns: OpenAI sk-, HuggingFace hf_, GitHub ghp_, Anthropic sk-ant-, generic api_key assignments
     SECRET_PATTERN='(sk-[a-zA-Z0-9]{20,}|sk-ant-[a-zA-Z0-9_\-]{20,}|gh[pousr]_[a-zA-Z0-9]{36,}|hf_[a-zA-Z0-9]{34,}|[a-zA-Z0-9_]*(?:api_key|apikey|secret_key|auth_token)\s*=\s*["'\''"][a-zA-Z0-9_\-]{16,}["'\''"])'
 
-    SUSPECTS=$(echo "$STAGED_DIFF" | grep -E "^\+" | grep -v "^\+\+\+" | grep -E -i "$SECRET_PATTERN" || true)
+    SUSPECTS=$(echo "$STAGED_DIFF" | grep '^[+]' | grep -v '^[+][+][+]' | grep -E -i "$SECRET_PATTERN" || true)
 
     if [ -n "$SUSPECTS" ]; then
         echo "ERROR: Suspected API key or token found in staged changes:"
