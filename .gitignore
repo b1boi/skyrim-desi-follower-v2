@@ -1,0 +1,52 @@
+# Environment & Secrets
+.env
+.env.*
+*.key
+*.pem
+*.token
+*.secret
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.venv/
+venv/
+ENV/
+
+# Testing & Logs
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# Large binary / generated media
+*.wav
+*.mp3
+*.ogg
+!tests/fixtures/*.wav
+
+# Upstream clones / submodules if cloned locally
+upstream/
+
+# OS specific
+.DS_Store
+Thumbs.db
