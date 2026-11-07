@@ -40,6 +40,10 @@ The following minimal set of patches was applied to `upstream/Mantella` to run t
 - **Modified**: `main.py` to make `StartUI` (Gradio) import optional with a fallback to headless FastAPI serving.
   - *Rationale*: Gradio is only used for the web settings UI; the SKSE game integration only interacts with `mantella_route` over HTTP. Making Gradio optional prevents startup crashes in minimal or headless Linux environments.
 
+### 7. Configurable Voice Output Directory (`src/games/skyrim.py`, `src/config/config_loader.py`)
+- **Modified**: `src/games/skyrim.py` (`prepare_sentence_for_game`) and `src/config/config_loader.py` to support `MANTELLA_VOICE_DIR` environment variable and `voice_output_folder` config setting.
+  - *Rationale*: Upstream Mantella hardcodes the output voice path to `<mod_folder>/Sound/Voice/Mantella.esp/MantellaVoice00`. Supporting `MANTELLA_VOICE_DIR` allows writing voice lines directly into arbitrary staging paths, custom follower mod folders, or the active Proton prefix Data directory without relying on fixed Windows directory layouts.
+
 ---
 
 ## What Remains Windows-Only in Upstream Mantella

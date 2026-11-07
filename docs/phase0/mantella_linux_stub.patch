@@ -53,6 +53,22 @@ index 923155e..590442c 100644
          
          mantella_http_server.start(int(config.port), routes, config.play_startup_sound, config.show_http_debug_messages)
  
+diff --git a/src/config/config_loader.py b/src/config/config_loader.py
+index 82590db..85ad0c9 100644
+--- a/src/config/config_loader.py
++++ b/src/config/config_loader.py
+@@ -179,6 +179,11 @@ class ConfigLoader:
+             self.mod_path_base = self.mod_path
+             self.mod_path += os.path.join("/", "Sound", "Voice", "Mantella.esp")
+ 
++            try:
++                self.voice_output_folder = self.__definitions.get_string_value("voice_output_folder")
++            except Exception:
++                self.voice_output_folder = ""
++
+             self.language = self.__definitions.get_string_value("language")
+             self.end_conversation_keyword = self.__definitions.get_string_value("end_conversation_keyword")
+             self.goodbye_npc_response = self.__definitions.get_string_value("goodbye_npc_response")
 diff --git a/src/config/definitions/tts_definitions.py b/src/config/definitions/tts_definitions.py
 index 8aa77c4..72f9467 100644
 --- a/src/config/definitions/tts_definitions.py
@@ -73,6 +89,22 @@ index 8aa77c4..72f9467 100644
          }[self]
  
  class TTSDefinitions:
+diff --git a/src/games/skyrim.py b/src/games/skyrim.py
+index c7c900e..8356fef 100644
+--- a/src/games/skyrim.py
++++ b/src/games/skyrim.py
+@@ -197,7 +197,10 @@ class Skyrim(Gameable):
+         mod_folder = config.mod_path
+         speaker: Character = queue_output.speaker
+ 
+-        if config.save_audio_data_to_character_folder:
++        voice_override = os.getenv("MANTELLA_VOICE_DIR") or getattr(config, 'voice_output_folder', None)
++        if voice_override and str(voice_override).strip():
++            voice_folder_path = str(voice_override).strip()
++        elif config.save_audio_data_to_character_folder:
+             voice_folder_path = os.path.join(mod_folder, queue_output.speaker.in_game_voice_model)
+             if not os.path.exists(voice_folder_path):
+                 logger.warning(f"{voice_folder_path} has been created for the first time. Please restart Skyrim to interact with this NPC.")
 diff --git a/src/llm/llm_client.py b/src/llm/llm_client.py
 index 4006e4f..a6dfc68 100644
 --- a/src/llm/llm_client.py
