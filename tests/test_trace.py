@@ -3,7 +3,7 @@ import os
 import subprocess
 import tempfile
 from pathlib import Path
-from src.trace import TurnTrace, TurnTracer
+from src.latency_trace import TurnTrace, TurnTracer
 from scripts.latency_report import compute_percentiles, summarize_metric, generate_report, format_markdown_table
 
 

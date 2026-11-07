@@ -1,5 +1,5 @@
 """
-trace.py - Pipeline Latency Instrumentation for Skyrim Desi Follower
+latency_trace.py - Pipeline Latency Instrumentation for Skyrim Desi Follower
 
 Records high-resolution monotonic timestamps (via time.perf_counter()) per turn
 across the full speech-to-speech interaction pipeline:
