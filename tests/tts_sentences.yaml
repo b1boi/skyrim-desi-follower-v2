@@ -1,0 +1,129 @@
+# Phase 0: T5 TTS Benchmark Sentences (Romanized Hinglish vs Devanagari Hindi)
+# Follower: Sarkaar Bhaiya (Skyrim Desi Follower)
+# Categorized into short first sentences (6-10 words) and longer sentences (15-20 words).
+
+short_sentences:
+  # Short first sentences (6-10 words) - designed for sub-second TTFA (Time to First Audio)
+  - id: "s01"
+    words: 7
+    romanized: "Arey bhaisahab, zara sambhal ke chaliye aage."
+    devanagari: "अरे भाईसाहब, ज़रा संभल के चलिए आगे।"
+  - id: "s02"
+    words: 6
+    romanized: "Dhyan se, yahan barf bahut geeli hai."
+    devanagari: "ध्यान से, यहाँ बर्फ़ बहुत गीली है।"
+  - id: "s03"
+    words: 7
+    romanized: "Aap aage chalo, main peeche cover karta hoon."
+    devanagari: "आप आगे चलो, मैं पीछे कवर करता हूँ।"
+  - id: "s04"
+    words: 6
+    romanized: "Sarkaar bhaiya hamesha aapke saath khada hai."
+    devanagari: "सरकार भैया हमेशा आपके साथ खड़ा है।"
+  - id: "s05"
+    words: 7
+    romanized: "Yeh gandi jagah mujhe bilkul pasand nahi."
+    devanagari: "यह गंदी जगह मुझे बिल्कुल पसंद नहीं।"
+  - id: "s06"
+    words: 6
+    romanized: "Ruk jao, aage kuch ajeeb aawaz aayi."
+    devanagari: "रुक जाओ, आगे कुछ अजीब आवाज़ आई।"
+  - id: "s07"
+    words: 8
+    romanized: "Bhaiya ka kehna mano, dushman aage chhipe hain."
+    devanagari: "भैया का कहना मानो, दुश्मन आगे छिपे हैं।"
+  - id: "s08"
+    words: 7
+    romanized: "Thodi der aag ke paas baithkar aaraam kar lo."
+    devanagari: "थोड़ी देर आग के पास बैठकर आराम कर लो।"
+  - id: "s09"
+    words: 6
+    romanized: "Mera danda sabka hisaab barabar kar dega."
+    devanagari: "मेरा डंडा सबका हिसाब बराबर कर देगा।"
+  - id: "s10"
+    words: 8
+    romanized: "Whiterun ka rasta idhar se hi jaata hai na?"
+    devanagari: "वाइटरन का रास्ता इधर से ही जाता है ना?"
+  - id: "s11"
+    words: 7
+    romanized: "Koi chinta mat karo, sab nipat lenge hum."
+    devanagari: "कोई चिंता मत करो, सब निपट लेंगे हम।"
+  - id: "s12"
+    words: 8
+    romanized: "Yeh bhaloo toh bilkul hamare gaon ke jaisa hai."
+    devanagari: "यह भालू तो बिल्कुल हमारे गाँव के जैसा है।"
+  - id: "s13"
+    words: 7
+    romanized: "Apna teer-kaman taiyar rakho, ladai hone wali hai."
+    devanagari: "अपना तीर-कमान तैयार रखो, लड़ाई होने वाली है।"
+  - id: "s14"
+    words: 6
+    romanized: "Chalo ab der mat karo, aage badho."
+    devanagari: "चलो अब देर मत करो, आगे बढ़ो।"
+  - id: "s15"
+    words: 7
+    romanized: "In lootero ko batate hain asli gunda kaun hai."
+    devanagari: "इन लुटेरों को बताते हैं असली गुंडा कौन है।"
+
+longer_sentences:
+  # Longer second sentences (15-20 words) - tests streaming throughput & natural prosody
+  - id: "l01"
+    words: 16
+    romanized: "Maine pehle hi kaha tha ki is gufa mein aana kisi bade khatre se kam nahi hoga."
+    devanagari: "मैंने पहले ही कहा था कि इस गुफ़ा में आना किसी बड़े ख़तरे से कम नहीं होगा।"
+  - id: "l02"
+    words: 17
+    romanized: "Agar Dragonborn bhaiya saath hain, toh Skyrim ke saare jallad milkar bhi hamara baal baanka nahi kar sakte."
+    devanagari: "अगर ड्रैगनबॉर्न भैया साथ हैं, तो स्काईरिम के सारे जल्लाद मिलकर भी हमारा बाल बाँका नहीं कर सकते।"
+  - id: "l03"
+    words: 16
+    romanized: "Aap aaram se khazana chuno, tab tak main bahar khade pehredaron ko theek se samjha deta hoon."
+    devanagari: "आप आराम से ख़ज़ाना चुनो, तब तक मैं बाहर खड़े पहरेदारों को ठीक से समझा देता हूँ।"
+  - id: "l04"
+    words: 18
+    romanized: "Riften ke chor aur bazzar ke thekedar sab milkar logon ko loot rahe hain, unka danda band karna padega."
+    devanagari: "रिफ़्टन के चोर और बाज़ार के ठेकेदार सब मिलकर लोगों को लूट रहे हैं, उनका धंधा बंद करना पड़ेगा।"
+  - id: "l05"
+    words: 15
+    romanized: "Yeh Draugr log hazaron saal se so rahe the, inko hamari aawaz ne hi jaga diya."
+    devanagari: "यह ड्रोगर लोग हज़ारों साल से सो रहे थे, इनको हमारी आवाज़ ने ही जगा दिया।"
+  - id: "l06"
+    words: 17
+    romanized: "Main sach keh raha hoon, itni bheed mein bhi aapka nishana bilkul chookta nahi hai, maza aa gaya."
+    devanagari: "मैं सच कह रहा हूँ, इतनी भीड़ में भी आपका निशाना बिल्कुल चूकता नहीं है, मज़ा आ गया।"
+  - id: "l07"
+    words: 16
+    romanized: "Solitude ke mahal mein baithkar raajneeti karne wale log hamare pahadon ka dard kabhi nahi samajh sakte."
+    devanagari: "सॉलिट्यूड के महल में बैठकर राजनीति करने वाले लोग हमारे पहाड़ों का दर्द कभी नहीं समझ सकते।"
+  - id: "l08"
+    words: 18
+    romanized: "Thoda jadu sikhne ki koshish ki thi maine bhi, par danda chalane mein jo anand hai woh kahin nahi."
+    devanagari: "थोड़ा जादू सीखने की कोशिश की थी मैंने भी, पर डंडा चलाने में जो आनंद है वह कहीं नहीं।"
+  - id: "l09"
+    words: 15
+    romanized: "Baraf ka toofan aane wala hai, jaldi se kisi sarai mein jakar aag taap lete hain."
+    devanagari: "बर्फ़ का तूफ़ान आने वाला है, जल्दी से किसी सराय में जाकर आग ताप लेते हैं।"
+  - id: "l10"
+    words: 16
+    romanized: "Aapke paas jab itna sara sona hai, toh naye lohe ka kavach banwa kyu nahi lete aap?"
+    devanagari: "आपके पास जब इतना सारा सोना है, तो नए लोहे का कवच बनवा क्यों नहीं लेते आप?"
+  - id: "l11"
+    words: 17
+    romanized: "Hamare padosi gaon mein ek budha rehta tha jo bilkul is Jarl jaisi hi lambi-chaudi batein karta tha."
+    devanagari: "हमारे पड़ोसी गाँव में एक बूढ़ा रहता था जो बिल्कुल इस यार्ल जैसी ही लंबी-चौड़ी बातें करता था।"
+  - id: "l12"
+    words: 16
+    romanized: "In drakht ke peeche koi ghura raha hai, chupchap hathiyaar nikaal lo aur bilkul shor mat machana."
+    devanagari: "इन दरख़्त के पीछे कोई घूर रहा है, चुपचाप हथियार निकाल लो और बिल्कुल शोर मत मचाना।"
+  - id: "l13"
+    words: 15
+    romanized: "Agli baar jab hum shahar jayenge toh wahan ke badmashon ko apna jalwa zaroor dikhayenge."
+    devanagari: "अगली बार जब हम शहर जाएँगे तो वहाँ के बदमाशों को अपना जलवा ज़रूर दिखाएँगे।"
+  - id: "l14"
+    words: 17
+    romanized: "Mausam jitna bhi kharab ho, Sarkaar Bhaiya kabhi apne wade se peeche nahi hatta yeh baat yaad rakhna."
+    devanagari: "मौसम जितना भी ख़राब हो, सरकार भैया कभी अपने वादे से पीछे नहीं हटता यह बात याद रखना।"
+  - id: "l15"
+    words: 18
+    romanized: "Agar yahan kisi ne aap par hath uthane ki gustakhi ki, toh main unka sara khandan nasht kar dunga."
+    devanagari: "अगर यहाँ किसी ने आप पर हाथ उठाने की गुस्ताख़ी की, तो मैं उनका सारा ख़ानदान नष्ट कर दूँगा।"
