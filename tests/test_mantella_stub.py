@@ -15,6 +15,8 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+os.environ.setdefault("MANTELLA_USER_FOLDER", os.path.join(REPO_ROOT, "run", "mantella_user"))
+os.environ.setdefault("MANTELLA_VOICE_DIR", os.path.join(REPO_ROOT, "run", "mantella_user", "voicelines"))
 sys.path.insert(0, os.path.join(REPO_ROOT, "upstream", "Mantella"))
 
 from src.setup import MantellaSetup
