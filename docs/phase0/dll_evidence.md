@@ -29,10 +29,10 @@ Upstream `Mantella-Spell` v0.14 distributes three Windows x64 DLL binaries in `S
 - **Source Availability**: Fully open source (MIT License).
 - **Upstream Release Version**: `v0.1.0-beta9`
 - **Underlying Framework**: Built with `CommonLibSSE-NG` and `cpr` (C++ Requests, based on libcurl).
-- **1.7.104 Compatibility**:
-  - The binary shipped with Mantella-Spell v0.14 was built against CommonLibSSE-NG header offsets for Skyrim $\le 1.6.1170$ (Address Library v11/v12).
-  - Out of the box on Skyrim `1.7.104.0`, SKSE 2.3.1 will report the plugin as incompatible because the version database header does not match Address Library v13.
-  - **Resolution**: Use the prebuilt community recompile (*"Mantella 1.7.104 SKSE Plugin Fix (Unofficial)"* on Nexus Mods, uploaded August 2026) or rebuild from source against the latest `CommonLibSSE-NG` master.
+- **1.7.104 Compatibility Status (Unverified Hypothesis)**:
+  - The binary shipped with Mantella-Spell v0.14 was compiled against `CommonLibSSE-NG` headers when Skyrim $\le 1.6.1170$ was standard.
+  - *Hypothesis to verify*: The DLL may either load seamlessly via Address Library v13 ("All in One 1.7.104.0") runtime offset resolution, or SKSE 2.3.1 may reject it during plugin load if the internal version header is bound to earlier runtime versions. This is an unverified hypothesis pending live verification via `skse64.log`.
+  - Do not assume a recompile is required until `skse64.log` confirms an incompatible version error.
 
 ### B. `MantellaSubtitles.dll`
 - **Role**: Injects arbitrary dynamic text directly into Skyrim's HUD subtitle widget without requiring pre-authored dialogue records or voice files.
@@ -40,9 +40,9 @@ Upstream `Mantella-Spell` v0.14 distributes three Windows x64 DLL binaries in `S
 - **Upstream Repository**: [`https://github.com/swwu/Mantella-Subtitles-Plugin-NG`](https://github.com/swwu/Mantella-Subtitles-Plugin-NG)
 - **Source Availability**: Fully open source (MIT License).
 - **Underlying Framework**: Built with `CommonLibSSE-NG`. Intercepts `BSAudioManager` and UI menu hooks.
-- **1.7.104 Compatibility**:
-  - Same as `SKSE_HTTP.dll`: compiled for Skyrim $\le 1.6.1170$.
-  - Requires rebuild or the community Address Library v13 drop-in.
+- **1.7.104 Compatibility Status (Unverified Hypothesis)**:
+  - Like `SKSE_HTTP.dll`, compatibility with Skyrim `1.7.104.0` / SKSE 2.3.1 remains an unverified hypothesis. CommonLibSSE-NG plugins that rely on Address Library database IDs often resolve offsets across minor Skyrim versions without code changes, provided the Address Library database supports the runtime and SKSE's compatibility check passes.
+  - Live testing with `skse64.log` will establish whether the original binary loads or fails.
 
 ### C. `MantellaLauncher.dll`
 - **Role**: Automatically launches the Windows `Mantella.exe` executable when Skyrim starts.
@@ -55,33 +55,25 @@ Upstream `Mantella-Spell` v0.14 distributes three Windows x64 DLL binaries in `S
 
 ---
 
-## 3. Community 1.7.104 Fix Artifacts
+## 3. Evaluation of Unofficial Fixes
 
-For Skyrim `1.7.104.0` with SKSE `2.3.1` and Address Library v13:
+Earlier notes referenced an unconfirmed community fix titled *"Mantella 1.7.104 SKSE Plugin Fix (Unofficial)"*.
 
-- **Nexus Mods Source**: *"Mantella 1.7.104 SKSE Plugin Fix (Unofficial)"* (Mod #127419)
-- **Author / Porter**: Community contributor (recompiled against CommonLibSSE-NG commit `d31a5c6` with AE 1.7.104 address database)
-- **Release Date**: August 2026 (following Bethesda's 1.7.104 update)
-- **Contents**:
-  - `SKSE/Plugins/SKSE_HTTP.dll` (v0.1.0-beta9 rebuild for 1.7.104)
-  - `SKSE/Plugins/MantellaSubtitles.dll` (NG rebuild for 1.7.104)
-- **Drop-in Location**:
-  `<Skyrim Special Edition>/Data/SKSE/Plugins/` (overwriting the older v0.14 DLLs).
+- **Verification Status**: **UNVERIFIED / UNPROVEN**
+- **Finding**: No verifiable download URL, author identity, cryptographic hash, or public source repository exists for this alleged fix.
+- **Policy**: Per Phase 0 rules (no unverified claims, never trust third-party binaries without source and provenance), this fix is **completely removed from recommendations and must not be used or relied upon**.
 
 ---
 
-## 4. Source Rebuild Feasibility (Linux Cross-Compilation)
+## 4. Rebuild Strategy & Recommendations
 
-If compiling from source on Linux instead of using prebuilt binaries:
-- **Prerequisites**:
-  - Clang 18+ with `clang-cl` frontend
-  - `xwin` toolchain to extract Windows SDK 10.0.22621+ headers and MSVC CRT sysroot
-  - CMake 3.25+ and `vcpkg`
-  - `CommonLibSSE-NG` (latest `master` branch with 1.7.104 database support)
-- **Effort Assessment**:
-  - Using community prebuilt drop-in DLLs: **< 5 minutes**
-  - Cross-compiling on Linux: **1–2 days** (heavy precompiled header `PCH.h` wrestling)
-  - Compiling natively on Windows: **15 minutes** (Visual Studio 2022 Community)
+If testing reveals that the original upstream DLLs fail to load under SKSE 2.3.1:
+- **Primary Fallback**: Build `SKSE_HTTP.dll` and `MantellaSubtitles.dll` directly from their official MIT GitHub repositories using a GitHub Actions `windows-latest` CI runner with MSVC (Visual Studio 2022) against the latest `CommonLibSSE-NG` and Address Library v13 headers (detailed build workflow provided in `docs/phase0/dll_build_plan.md`).
+- **Linux Cross-Compilation**: Not recommended. Cross-compiling CommonLibSSE-NG with Clang/xwin on Linux introduces fragile MSVC header and PCH emulation issues. A clean GitHub Actions Windows runner provides a reproducible, auditable binary build in under 10 minutes.
 
-**Recommendation**: Verify with the community prebuilt DLLs first. If a custom build is ever required (e.g., adding custom follower-specific native hooks), use a clean Windows MSVC environment.
+**Action Plan**:
+1. Test the original upstream Mantella v0.14 DLLs (`SKSE_HTTP.dll` and `MantellaSubtitles.dll`) in Skyrim 1.7.104 with SKSE 2.3.1 and Address Library v13.
+2. Inspect `skse64.log` to determine exact loading behavior.
+3. If SKSE loads both DLLs without error, continue without rebuilding.
+4. If either DLL fails to load, trigger the GitHub Actions clean build per `docs/phase0/dll_build_plan.md`.
 
