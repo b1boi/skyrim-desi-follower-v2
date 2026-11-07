@@ -5,6 +5,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 export PYTHONPATH="${REPO_ROOT}/upstream/Mantella:${PYTHONPATH:-}"
+export MANTELLA_USER_FOLDER="${MANTELLA_USER_FOLDER:-${REPO_ROOT}/run/mantella_user}"
+export MANTELLA_VOICE_DIR="${MANTELLA_VOICE_DIR:-${REPO_ROOT}/run/mantella_user/voicelines}"
+
+mkdir -p "${MANTELLA_USER_FOLDER}" "${MANTELLA_VOICE_DIR}"
 
 if [ -f "${REPO_ROOT}/.venv/bin/python" ]; then
     PYTHON_BIN="${REPO_ROOT}/.venv/bin/python"

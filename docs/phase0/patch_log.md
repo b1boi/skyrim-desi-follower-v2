@@ -29,12 +29,11 @@ The following minimal set of patches was applied to `upstream/Mantella` to run t
 - **Modified**: `src/utils.py` in `is_local_url` to recognize `'stub'` and `'localhost'` as local URLs.
   - *Rationale*: Bypasses OpenAI/OpenRouter network calls and `GPT_SECRET_KEY.txt` lookups for mock/offline testing.
 
-### 5. Linux CWD & Path Resolution (`src/setup.py`, `custom_user_folder.ini`, `main.py`)
+### 5. Linux CWD, Path Resolution & User Folder (`src/setup.py`, `main.py`)
 - **Modified**: `src/setup.py` (`_set_cwd_to_exe_dir`) to `os.chdir(utils.resolve_path())` when running as a Python script.
-- **Modified**: `src/setup.py` (`_get_custom_user_folder`) to resolve `custom_user_folder.ini` via `utils.resolve_path()`.
-- **Modified**: `custom_user_folder.ini` to set `custom_user_folder = <workspace>/run/mantella_user`.
+- **Modified**: `src/setup.py` (`_get_custom_user_folder`) to prioritize `MANTELLA_USER_FOLDER` environment variable before reading `custom_user_folder.ini`.
 - **Modified**: `main.py` to resolve `data/language_support.csv` using `utils.resolve_path()` and ensure `logger` is initialized before the main `try` block.
-  - *Rationale*: On Linux under standard user permissions, Mantella's default hardcoded path `/home/<user>/Documents/My Games/Mantella` can fail with `OSError: [Errno 30] Read-only file system` or `FileNotFoundError` if Documents does not exist. Using `custom_user_folder.ini` keeps runtime files inside the workspace, and path resolution ensures Mantella can be run from any working directory.
+  - *Rationale*: On Linux under standard user permissions, Mantella's default hardcoded path `/home/<user>/Documents/My Games/Mantella` can fail with `OSError: [Errno 30] Read-only file system` or `FileNotFoundError` if Documents does not exist. Using `MANTELLA_USER_FOLDER` (set by `scripts/run_server.sh` to `<workspace>/run/mantella_user`) keeps runtime files inside the workspace dynamically without hardcoding machine-specific absolute paths into `custom_user_folder.ini`.
 
 ### 6. Headless Server Support (`main.py`)
 - **Modified**: `main.py` to make `StartUI` (Gradio) import optional with a fallback to headless FastAPI serving.

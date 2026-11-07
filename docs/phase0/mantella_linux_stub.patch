@@ -1,15 +1,3 @@
-diff --git a/custom_user_folder.ini b/custom_user_folder.ini
-index bcaba09..1666a82 100644
---- a/custom_user_folder.ini
-+++ b/custom_user_folder.ini
-@@ -2,4 +2,4 @@
- ; custom_user_folder
- ;   Acts as an override to the default Mantella user folder in '../Documents/My Games/Mantella/'
- ;   Use this in case the default path to the user folder of Mantella is inaccessible
--custom_user_folder =
-\ No newline at end of file
-+custom_user_folder = /home/bepis/git/skyrim-desi-follower-v2/run/mantella_user
-\ No newline at end of file
 diff --git a/main.py b/main.py
 index 923155e..590442c 100644
 --- a/main.py
@@ -148,10 +136,10 @@ index 4006e4f..a6dfc68 100644
 +            return "Bhaiyo aur behno, Swagat hai! Sarkaar Bhaiya aapke saath hai."
 +        return super().request_call(messages)
 diff --git a/src/setup.py b/src/setup.py
-index 041bb25..a11c6e3 100644
+index 041bb25..5ef273f 100644
 --- a/src/setup.py
 +++ b/src/setup.py
-@@ -52,14 +52,15 @@ Conversation histories, config.ini, and logging.log available in:
+@@ -52,14 +52,18 @@ Conversation histories, config.ini, and logging.log available in:
          return self.config, self.language_info
  
      def _set_cwd_to_exe_dir(self):
@@ -166,6 +154,9 @@ index 041bb25..a11c6e3 100644
      def _get_custom_user_folder(self) -> str:
          '''Find Mantella's saved data folder from configuration file if it exists'''
 -        file_name = "custom_user_folder.ini"
++        env_folder = os.getenv("MANTELLA_USER_FOLDER")
++        if env_folder and str(env_folder).strip():
++            return str(env_folder).strip()
 +        file_name = os.path.join(utils.resolve_path(), "custom_user_folder.ini")
          if not os.path.exists(file_name):
              return ""
