@@ -153,3 +153,4 @@ EndIf
 | **File Handoff (Disk Write)** | $< 10\text{ ms}$ | `t_handoff_write_wav - t_tts_first_chunk_end` |
 | **SKSE ModEvent $\rightarrow$ Game Playback** | $\sim 16 - 32\text{ ms}$ | 1–2 Papyrus engine frames |
 | **Total Round-Trip Latency** | **$800 - 1400\text{ ms}$** | `total_roundtrip_ms` in `latency_trace.py` |
+

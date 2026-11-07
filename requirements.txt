@@ -27,3 +27,4 @@ opentelemetry-instrumentation-logging
 
 # Testing & Measurement
 pytest>=8.0.0
+

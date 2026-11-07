@@ -84,3 +84,4 @@ If compiling from source on Linux instead of using prebuilt binaries:
   - Compiling natively on Windows: **15 minutes** (Visual Studio 2022 Community)
 
 **Recommendation**: Verify with the community prebuilt DLLs first. If a custom build is ever required (e.g., adding custom follower-specific native hooks), use a clean Windows MSVC environment.
+
