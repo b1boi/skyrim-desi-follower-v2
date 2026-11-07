@@ -154,3 +154,112 @@ EndIf
 | **SKSE ModEvent $\rightarrow$ Game Playback** | $\sim 16 - 32\text{ ms}$ | 1–2 Papyrus engine frames |
 | **Total Round-Trip Latency** | **$800 - 1400\text{ ms}$** | `total_roundtrip_ms` in `latency_trace.py` |
 
+---
+
+## 5. Voice Turn Start and End: Mechanism & Signal Audit
+
+### A. Papyrus Request Initiation
+When the player speaks or turn control passes to the player, Papyrus initiates the voice transcription flow:
+1. In `upstream/Mantella-Spell/Scripts/Source/MantellaConversation.psc:188`:
+   ```papyrus
+   elseIf(nextAction == mConsts.KEY_REPLYTYPE_PLAYERTALK)
+       _does_accept_player_input = True
+       If (repository.microphoneEnabled && !repository.useHotkeyToStartMic)
+           sendRequestForVoiceTranscribe()
+       Else
+           ShowRepeatingMessage("Awaiting player input...")
+       EndIf
+   ```
+2. In `MantellaConversation.psc:510-520`:
+   ```papyrus
+   function sendRequestForVoiceTranscribe()
+       if(!_does_accept_player_input)
+           return
+       Else
+           _does_accept_player_input = False
+       endif
+
+       sendRequestForPlayerInput("", updateContext=True)
+       ShowRepeatingMessage("Listening...")
+   endFunction
+   ```
+3. In `MantellaConversation.psc:487-504`:
+   `sendRequestForPlayerInput("", updateContext=True)` packages a JSON request where:
+   - `KEY_REQUESTTYPE` = `"mantella_player_input"`
+   - `KEY_REQUESTTYPE_PLAYERINPUT` = `""` (empty string)
+   - Packages actors, anger state, and world context via `BuildContext()`
+   - Dispatches via `SKSE_HTTP.sendLocalhostHttpRequest` to `POST /mantella` on `:4999`.
+4. Papyrus displays `"Listening..."` and enters a passive wait state for the `SKSE_HTTP_OnHttpReplyReceived` ModEvent.
+
+### B. Who Decides Speech Has Ended on the Python Side?
+The decision that speech has ended is made **exclusively on the Python backend**. The game provides **no timing, audio frames, or termination signals**.
+
+1. **Backend Polling Loop (`src/conversation/conversation.py:220-256`)**:
+   Upon receiving `mantella_player_input` with an empty string, Python invokes `self.__talk.process_player_input(player_text)`:
+   ```python
+   # conversation.py:240-241
+   while not player_text:
+       player_text = self.__stt.get_latest_transcription(silence_timeout=silence_timeout)
+   ```
+   This call blocks until the STT audio engine signals that a complete utterance is ready.
+
+2. **VAD Speech End Detection (`src/stt/stt.py:440-475`)**:
+   In standard microphone mode, incoming audio chunks from `sounddevice` are processed by Silero VAD:
+   ```python
+   # stt.py:459-468
+   probability = self.vad.process(chunk)
+   if probability > self.audio_threshold:
+       self._last_update_time = time.time()
+       if not self._speech_detected:
+           logger.log(self.loglevel, 'Speech detected')
+           self._speech_detected = True
+
+   effective_pause = self._temporary_pause_override if self._temporary_pause_override is not None else self.pause_threshold
+   if probability <= self.audio_threshold and self._speech_detected and time.time() - self._last_update_time > effective_pause:
+       logger.log(self.loglevel, 'Speech ended')
+       self._finalize_transcription(transcribe=not self.proactive_mic_mode)
+       return chunk_count
+   ```
+   - **End Criterion**: Speech has ended when `probability <= audio_threshold` AND the silence duration (`time.time() - self._last_update_time`) exceeds `effective_pause` (default `pause_threshold` $\approx 0.8\text{s}$, or the extended `mantella_npc_listen` action duration).
+   - Once triggered, `_finalize_transcription()` runs the ASR model on `_audio_buffer`, sets `_transcription_ready.set()`, and unblocks `get_latest_transcription()`.
+
+3. **PTT Speech End Detection (`src/stt/stt.py:402-436`)**:
+   In Push-to-Talk mode:
+   ```python
+   # stt.py:413-424
+   is_pressed = self._ptt.is_pressed()
+   if is_pressed:
+       self._audio_buffer = np.concatenate((self._audio_buffer, chunk))
+       if not self._ptt_active:
+           self._ptt_active = True
+   elif self._ptt_active:
+       logger.log(self.loglevel, 'PTT released - transcribing')
+       if len(self._audio_buffer) > 0 and audio_duration >= self.MIN_PTT_DURATION:
+           self._finalize_transcription()
+   ```
+   - **End Criterion**: Speech ends when the tracked key transitions from pressed to released.
+
+### C. Game-Side Key-Down / Key-Up Capabilities vs. Upstream Design
+1. **Existing Upstream PTT Mechanism (`src/stt/ptt_controller.py`)**:
+   Upstream Mantella's PTT implementation **does not use Skyrim or Papyrus at all**. It polls Windows OS raw input directly using `win32api.GetAsyncKeyState`:
+   ```python
+   # ptt_controller.py:17-18
+   if not sys.platform.startswith('win'):
+       return False
+   ```
+   - Because this relies on Windows OS APIs, it is completely inoperative on Linux.
+   - The game client is totally unaware that PTT is occurring.
+
+2. **Does the Skyrim Engine Support Signaling Key-Down and Key-Up?**:
+   **YES**. Skyrim and SKSE provide native key-event capture:
+   - **Papyrus Registration**: Any Papyrus script extending `ReferenceAlias` or `Form` can call `RegisterForKey(int keyCode)` (using DirectX scancodes, e.g. `0x12` for 'E', `0x2A` for 'Left Shift').
+   - **Event Handlers**: The engine natively fires:
+     - `Event OnKeyDown(int keyCode)`
+     - `Event OnKeyUp(int keyCode)`
+   - **SKSE Input API**: SKSE exposes `Input.IsKeyPressed(int keyCode)` and `Input.GetMappedKey(string controlName)` to read or poll input states directly from the game.
+   - **Feasible Linux-Native PTT Architecture for Sarkaar Bhaiya**:
+     Instead of host-level keyboard hooks (which break on Wayland/Linux sandbox), Papyrus can register a follower talk keybind in `SarkaarBhaiyaInput.psc`:
+     - On `OnKeyDown`: Dispatches `SKSE_HTTP.sendLocalhostHttpRequest` with `{"mantella_request_type": "ptt_start"}`.
+     - On `OnKeyUp`: Dispatches `SKSE_HTTP.sendLocalhostHttpRequest` with `{"mantella_request_type": "ptt_end"}`.
+     This keeps keyboard handling 100% inside the game engine, completely cross-platform, and fully functional under Proton without requiring OS-level privileges.
+
