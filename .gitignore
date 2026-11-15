@@ -47,6 +47,18 @@ htmlcov/
 *.ogg
 !tests/fixtures/*.wav
 
+# Bethesda Game Studios proprietary assets
+*.bsa
+*.ba2
+*.esm
+*.fuz
+*.xwm
+Skyrim.esm
+Update.esm
+Dawnguard.esm
+HearthFires.esm
+Dragonborn.esm
+
 # Upstream clones / submodules if cloned locally
 upstream/
 

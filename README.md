@@ -133,8 +133,11 @@ python scripts/latency_report.py run/mantella_user/trace.jsonl --format markdown
 
 ---
 
-## License
+## License & Third-Party Notices
 
 This project is licensed under the **GNU Affero General Public License v3.0 (AGPL-3.0)**. See [`LICENSE`](file:///home/bepis/git/skyrim-desi-follower-v2/LICENSE) for details.
-Upstream Mantella is licensed under GPL-3.0 by art-from-the-machine.
+
+- Upstream Mantella is licensed under **AGPL-3.0** by art-from-the-machine.
+- UESP-derived lore compilations in `data/` are licensed under **CC BY-SA 2.5 Generic**. See [`data/LICENSE`](file:///home/bepis/git/skyrim-desi-follower-v2/data/LICENSE).
+- Detailed credits, third-party component licenses, and the Bethesda proprietary asset non-inclusion disclaimer are documented in [`THIRD_PARTY_NOTICES.md`](file:///home/bepis/git/skyrim-desi-follower-v2/THIRD_PARTY_NOTICES.md).
 
