@@ -121,3 +121,4 @@ After Skyrim starts (or if it halts), inspect the log file located inside your P
 - Game crashes immediately on startup.
 
 > **Decision Rule**: If the PASS criteria are met, Phase 0 in-game feasibility gate is proven for SKSE 2.3.1. If FAIL criteria are triggered and cannot be resolved within the 1-working-day budget, we immediately switch to **Plan B (Skyrim 1.6.1170 downgrade or mock backend)** for all subsequent follower development.
+

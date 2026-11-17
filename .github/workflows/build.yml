@@ -20,14 +20,10 @@ on:
         description: 'MantellaSubtitles fork repository'
         required: true
         default: 'b1boi/Mantella-Subtitles-Plugin-sarkaar'
-      commonlib_repo:
-        description: 'CommonLibSSE-NG repository URL'
+      fork_ref:
+        description: 'Branch or commit in fork repositories'
         required: true
-        default: 'https://github.com/alandtse/CommonLibSSE-NG.git'
-      commonlib_ref:
-        description: 'CommonLibSSE-NG branch or commit'
-        required: true
-        default: 'ng'
+        default: 'sse-1.7.104'
 
 jobs:
   build-skse-http:
@@ -40,7 +36,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
           repository: ${{ github.event.inputs.skse_http_repo }}
-          submodules: 'recursive'
+          ref: ${{ github.event.inputs.fork_ref }}
           path: 'SKSE_HTTP'
 
       - name: Set up MSVC Environment
@@ -48,20 +44,6 @@ jobs:
         uses: ilammy/msvc-dev-cmd@cdc98472f2329188e8d893c5d648b2512f4fa9b4
         with:
           arch: 'x64'
-
-      - name: Update and Inspect CommonLibSSE-NG
-        shell: pwsh
-        run: |
-          cd SKSE_HTTP/extern/CommonLibSSE-NG
-          git remote set-url origin ${{ github.event.inputs.commonlib_repo }}
-          git fetch origin ${{ github.event.inputs.commonlib_ref }}
-          git checkout FETCH_HEAD
-          $commit = git rev-parse HEAD
-          $log = git log -1 --oneline
-          Write-Host "===================================================="
-          Write-Host "CommonLibSSE-NG Commit Used: $commit"
-          Write-Host "Summary: $log"
-          Write-Host "===================================================="
 
       - name: Configure CMake (SE + AE Multi-Target, VR Disabled)
         shell: pwsh
@@ -74,6 +56,17 @@ jobs:
                 -DENABLE_SKYRIM_SE=ON `
                 -DENABLE_SKYRIM_AE=ON `
                 -DENABLE_SKYRIM_VR=OFF
+
+      - name: Inspect CommonLibSSE-NG Used by Build
+        shell: pwsh
+        run: |
+          cd SKSE_HTTP/build/_deps/commonlibsse-src
+          $commit = git rev-parse HEAD
+          $log = git log -1 --oneline
+          Write-Host "===================================================="
+          Write-Host "CommonLibSSE-NG Commit Used: $commit"
+          Write-Host "Summary: $log"
+          Write-Host "===================================================="
 
       - name: Compile SKSE_HTTP
         shell: pwsh
@@ -111,7 +104,7 @@ jobs:
         uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
           repository: ${{ github.event.inputs.subtitles_repo }}
-          submodules: 'recursive'
+          ref: ${{ github.event.inputs.fork_ref }}
           path: 'MantellaSubtitles'
 
       - name: Set up MSVC Environment
@@ -119,20 +112,6 @@ jobs:
         uses: ilammy/msvc-dev-cmd@cdc98472f2329188e8d893c5d648b2512f4fa9b4
         with:
           arch: 'x64'
-
-      - name: Update and Inspect CommonLibSSE-NG
-        shell: pwsh
-        run: |
-          cd MantellaSubtitles/extern/CommonLibSSE-NG
-          git remote set-url origin ${{ github.event.inputs.commonlib_repo }}
-          git fetch origin ${{ github.event.inputs.commonlib_ref }}
-          git checkout FETCH_HEAD
-          $commit = git rev-parse HEAD
-          $log = git log -1 --oneline
-          Write-Host "===================================================="
-          Write-Host "CommonLibSSE-NG Commit Used: $commit"
-          Write-Host "Summary: $log"
-          Write-Host "===================================================="
 
       - name: Configure CMake (SE + AE Multi-Target, VR Disabled)
         shell: pwsh
@@ -145,6 +124,17 @@ jobs:
                 -DENABLE_SKYRIM_SE=ON `
                 -DENABLE_SKYRIM_AE=ON `
                 -DENABLE_SKYRIM_VR=OFF
+
+      - name: Inspect CommonLibSSE-NG Used by Build
+        shell: pwsh
+        run: |
+          cd MantellaSubtitles/build/_deps/commonlibsse-src
+          $commit = git rev-parse HEAD
+          $log = git log -1 --oneline
+          Write-Host "===================================================="
+          Write-Host "CommonLibSSE-NG Commit Used: $commit"
+          Write-Host "Summary: $log"
+          Write-Host "===================================================="
 
       - name: Compile MantellaSubtitles
         shell: pwsh

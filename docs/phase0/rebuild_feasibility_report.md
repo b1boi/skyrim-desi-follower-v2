@@ -110,6 +110,6 @@ All workflow and patch files are prepared strictly in local branch `rebuild-skse
    - `workflow_dispatch` only, zero secrets, all actions pinned by full 40-character commit SHA.
    - Outputs compiled DLLs and SHA-256 hash files as artifacts.
    - Logs the exact CommonLibSSE-NG commit SHA used in the build.
-2. **Patches**:
-   - [`patches/skse_http_multitarget.patch`](patches/skse_http_multitarget.patch)
-   - [`patches/mantella_subtitles_multitarget.patch`](patches/mantella_subtitles_multitarget.patch)
+2. **Local Fork Commits (`sse-1.7.104` branch in both fork repos)**:
+   - `b1boi/SKSE_HTTP_sarkaar` (commit `ee8a706ae49768560f56657473b1dceaee90d0e3`): Removes obsolete `colorglass` vcpkg registry, pins `alandtse/CommonLibSSE-NG` to `v15.7.3` via FetchContent, enables SE+AE and disables VR, and adds third-party `NOTICE` (GPL-3.0 combined work disclosure).
+   - `b1boi/Mantella-Subtitles-Plugin-sarkaar` (commit `d72b2655e8099c8378a49913df9a93b9857fdcd4`): Removes obsolete `colorglass` vcpkg registry, pins `alandtse/CommonLibSSE-NG` to `v15.7.3` via FetchContent, enables SE+AE and disables VR, and adds third-party `NOTICE` (GPL-3.0 combined work disclosure).
