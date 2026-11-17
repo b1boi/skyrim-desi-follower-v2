@@ -9,10 +9,10 @@ index 3c4d5e6..7f8a9b0 100644
 +set(CMAKE_CXX_STANDARD 20)
 +set(CMAKE_CXX_STANDARD_REQUIRED ON)
 +
-+# Multi-runtime Skyrim support via CommonLibSSE-NG and Address Library
++# SE+AE Skyrim support via CommonLibSSE-NG and Address Library (VR disabled)
 +set(ENABLE_SKYRIM_SE ON CACHE BOOL "Enable Skyrim SE 1.5.97 support" FORCE)
 +set(ENABLE_SKYRIM_AE ON CACHE BOOL "Enable Skyrim AE 1.6.x and 1.7.x support" FORCE)
-+set(ENABLE_SKYRIM_VR ON CACHE BOOL "Enable Skyrim VR support" FORCE)
++set(ENABLE_SKYRIM_VR OFF CACHE BOOL "Disable Skyrim VR support" FORCE)
 +
  add_subdirectory(extern/CommonLibSSE-NG)
  

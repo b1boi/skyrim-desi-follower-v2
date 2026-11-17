@@ -1,124 +1,173 @@
-name: Rebuild SKSE Plugins (Option A)
+name: Build SKSE Plugins (Option A)
 
-# Draft build workflow for b1boi forks of SKSE_HTTP and Mantella-Subtitles-Plugin-NG.
-# Targets multi-version Skyrim (SE 1.5.97, AE 1.6.x, AE 1.7.104) via CommonLibSSE-NG.
-# STATUS: DRAFT ONLY - DO NOT RUN AUTOMATICALLY (Triggered via workflow_dispatch only).
+# Reproducible, isolated GitHub Actions workflow to build SKSE_HTTP and MantellaSubtitles.
+# Targets Skyrim SE (1.5.97) + AE (1.6.x / 1.7.104) via CommonLibSSE-NG. VR is disabled.
+# Security & Safety:
+#   - Trigger: workflow_dispatch only (manual trigger; no automatic execution)
+#   - Zero secrets or credentials required
+#   - All GitHub Actions pinned by full 40-character commit SHA
+#   - Runner: windows-latest (MSVC 2022)
+#   - Outputs: Compiled DLLs + SHA256 hash files
 
 on:
   workflow_dispatch:
     inputs:
       skse_http_repo:
-        description: 'SKSE_HTTP repository (fork under github.com/b1boi)'
+        description: 'SKSE_HTTP fork repository'
         required: true
-        default: 'b1boi/SKSE_HTTP'
+        default: 'b1boi/SKSE_HTTP_sarkaar'
       subtitles_repo:
-        description: 'MantellaSubtitles repository (fork under github.com/b1boi)'
+        description: 'MantellaSubtitles fork repository'
         required: true
-        default: 'b1boi/Mantella-Subtitles-Plugin-NG'
-      commonlib_branch:
-        description: 'CommonLibSSE-NG branch/tag (with 1.7.104 Address Library v13 support)'
+        default: 'b1boi/Mantella-Subtitles-Plugin-sarkaar'
+      commonlib_repo:
+        description: 'CommonLibSSE-NG repository URL'
         required: true
-        default: 'master'
+        default: 'https://github.com/alandtse/CommonLibSSE-NG.git'
+      commonlib_ref:
+        description: 'CommonLibSSE-NG branch or commit'
+        required: true
+        default: 'ng'
 
 jobs:
   build-skse-http:
-    name: Build Multi-Runtime SKSE_HTTP.dll
+    name: Build SKSE_HTTP.dll
     runs-on: windows-latest
 
     steps:
       - name: Checkout SKSE_HTTP Fork
-        uses: actions/checkout@v4
+        # actions/checkout@v4.1.7 (pinned by commit SHA)
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
           repository: ${{ github.event.inputs.skse_http_repo }}
           submodules: 'recursive'
           path: 'SKSE_HTTP'
 
-      - name: Set up MSVC Developer Command Prompt
-        uses: ilammy/msvc-dev-cmd@v1
+      - name: Set up MSVC Environment
+        # ilammy/msvc-dev-cmd@v1.13.0 (pinned by commit SHA)
+        uses: ilammy/msvc-dev-cmd@cdc98472f2329188e8d893c5d648b2512f4fa9b4
         with:
           arch: 'x64'
 
-      - name: Setup Ninja
-        uses: ashley-tauro/ninja-build-action@v1.0.0
-
-      - name: Update CommonLibSSE-NG Submodule
+      - name: Update and Inspect CommonLibSSE-NG
         shell: pwsh
         run: |
           cd SKSE_HTTP/extern/CommonLibSSE-NG
-          git checkout ${{ github.event.inputs.commonlib_branch }}
-          git pull origin ${{ github.event.inputs.commonlib_branch }}
+          git remote set-url origin ${{ github.event.inputs.commonlib_repo }}
+          git fetch origin ${{ github.event.inputs.commonlib_ref }}
+          git checkout FETCH_HEAD
+          $commit = git rev-parse HEAD
+          $log = git log -1 --oneline
+          Write-Host "===================================================="
+          Write-Host "CommonLibSSE-NG Commit Used: $commit"
+          Write-Host "Summary: $log"
+          Write-Host "===================================================="
 
-      - name: Configure CMake (Multi-Runtime Target)
+      - name: Configure CMake (SE + AE Multi-Target, VR Disabled)
         shell: pwsh
         run: |
           cmake -B SKSE_HTTP/build `
                 -S SKSE_HTTP `
-                -G "Ninja" `
+                -G "Visual Studio 17 2022" `
+                -A x64 `
                 -DCMAKE_BUILD_TYPE=Release `
                 -DENABLE_SKYRIM_SE=ON `
                 -DENABLE_SKYRIM_AE=ON `
-                -DENABLE_SKYRIM_VR=ON
+                -DENABLE_SKYRIM_VR=OFF
 
-      - name: Build SKSE_HTTP
+      - name: Compile SKSE_HTTP
         shell: pwsh
         run: |
           cmake --build SKSE_HTTP/build --config Release
 
-      - name: Upload SKSE_HTTP.dll
-        uses: actions/upload-artifact@v4
+      - name: Package Artifacts & Calculate Hashes
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts/SKSE_HTTP
+          $dll = Get-ChildItem -Path SKSE_HTTP/build -Filter "SKSE_HTTP.dll" -Recurse | Select-Object -First 1
+          if (-not $dll) {
+            Write-Error "SKSE_HTTP.dll was not produced by the build."
+            exit 1
+          }
+          Copy-Item $dll.FullName -Destination artifacts/SKSE_HTTP/SKSE_HTTP.dll
+          $hash = (Get-FileHash -Algorithm SHA256 artifacts/SKSE_HTTP/SKSE_HTTP.dll).Hash
+          Write-Host "SKSE_HTTP.dll SHA256: $hash"
+          "$hash  SKSE_HTTP.dll" | Out-File -FilePath artifacts/SKSE_HTTP/SKSE_HTTP.dll.sha256 -Encoding ascii
+
+      - name: Upload SKSE_HTTP Artifacts
+        # actions/upload-artifact@v4.3.4 (pinned by commit SHA)
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b
         with:
-          name: SKSE_HTTP-MultiTarget
-          path: |
-            SKSE_HTTP/build/SKSE_HTTP.dll
-            SKSE_HTTP/build/Release/SKSE_HTTP.dll
+          name: SKSE_HTTP-sarkaar
+          path: artifacts/SKSE_HTTP/*
 
   build-mantella-subtitles:
-    name: Build Multi-Runtime MantellaSubtitles.dll
+    name: Build MantellaSubtitles.dll
     runs-on: windows-latest
 
     steps:
       - name: Checkout Mantella-Subtitles Fork
-        uses: actions/checkout@v4
+        # actions/checkout@v4.1.7 (pinned by commit SHA)
+        uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
         with:
           repository: ${{ github.event.inputs.subtitles_repo }}
           submodules: 'recursive'
           path: 'MantellaSubtitles'
 
-      - name: Set up MSVC Developer Command Prompt
-        uses: ilammy/msvc-dev-cmd@v1
+      - name: Set up MSVC Environment
+        # ilammy/msvc-dev-cmd@v1.13.0 (pinned by commit SHA)
+        uses: ilammy/msvc-dev-cmd@cdc98472f2329188e8d893c5d648b2512f4fa9b4
         with:
           arch: 'x64'
 
-      - name: Setup Ninja
-        uses: ashley-tauro/ninja-build-action@v1.0.0
-
-      - name: Update CommonLibSSE-NG Submodule
+      - name: Update and Inspect CommonLibSSE-NG
         shell: pwsh
         run: |
           cd MantellaSubtitles/extern/CommonLibSSE-NG
-          git checkout ${{ github.event.inputs.commonlib_branch }}
-          git pull origin ${{ github.event.inputs.commonlib_branch }}
+          git remote set-url origin ${{ github.event.inputs.commonlib_repo }}
+          git fetch origin ${{ github.event.inputs.commonlib_ref }}
+          git checkout FETCH_HEAD
+          $commit = git rev-parse HEAD
+          $log = git log -1 --oneline
+          Write-Host "===================================================="
+          Write-Host "CommonLibSSE-NG Commit Used: $commit"
+          Write-Host "Summary: $log"
+          Write-Host "===================================================="
 
-      - name: Configure CMake (Multi-Runtime Target)
+      - name: Configure CMake (SE + AE Multi-Target, VR Disabled)
         shell: pwsh
         run: |
           cmake -B MantellaSubtitles/build `
                 -S MantellaSubtitles `
-                -G "Ninja" `
+                -G "Visual Studio 17 2022" `
+                -A x64 `
                 -DCMAKE_BUILD_TYPE=Release `
                 -DENABLE_SKYRIM_SE=ON `
                 -DENABLE_SKYRIM_AE=ON `
-                -DENABLE_SKYRIM_VR=ON
+                -DENABLE_SKYRIM_VR=OFF
 
-      - name: Build MantellaSubtitles
+      - name: Compile MantellaSubtitles
         shell: pwsh
         run: |
           cmake --build MantellaSubtitles/build --config Release
 
-      - name: Upload MantellaSubtitles.dll
-        uses: actions/upload-artifact@v4
+      - name: Package Artifacts & Calculate Hashes
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts/MantellaSubtitles
+          $dll = Get-ChildItem -Path MantellaSubtitles/build -Filter "MantellaSubtitles.dll" -Recurse | Select-Object -First 1
+          if (-not $dll) {
+            Write-Error "MantellaSubtitles.dll was not produced by the build."
+            exit 1
+          }
+          Copy-Item $dll.FullName -Destination artifacts/MantellaSubtitles/MantellaSubtitles.dll
+          $hash = (Get-FileHash -Algorithm SHA256 artifacts/MantellaSubtitles/MantellaSubtitles.dll).Hash
+          Write-Host "MantellaSubtitles.dll SHA256: $hash"
+          "$hash  MantellaSubtitles.dll" | Out-File -FilePath artifacts/MantellaSubtitles/MantellaSubtitles.dll.sha256 -Encoding ascii
+
+      - name: Upload MantellaSubtitles Artifacts
+        # actions/upload-artifact@v4.3.4 (pinned by commit SHA)
+        uses: actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b
         with:
-          name: MantellaSubtitles-MultiTarget
-          path: |
-            MantellaSubtitles/build/MantellaSubtitles.dll
-            MantellaSubtitles/build/Release/MantellaSubtitles.dll
+          name: MantellaSubtitles-sarkaar
+          path: artifacts/MantellaSubtitles/*

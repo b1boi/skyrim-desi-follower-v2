@@ -1,8 +1,11 @@
 # Phase 0: GitHub Actions Build Plan for SKSE Plugins
 
 **Target DLLs**: `SKSE_HTTP.dll` & `MantellaSubtitles.dll`  
-**Target Runtime**: Skyrim Special Edition / Anniversary Edition `1.7.104.0` (Address Library v13)  
+**Target Runtime**: Skyrim Special Edition / Anniversary Edition `1.7.104.0` (SKSE64 `2.3.1`, Address Library v13)  
 **Execution Environment**: GitHub Actions (`windows-latest` runner)  
+**Forks**:  
+- `https://github.com/b1boi/SKSE_HTTP_sarkaar` (MIT License)  
+- `https://github.com/b1boi/Mantella-Subtitles-Plugin-sarkaar` (MIT License)  
 **Status**: **DRAFT ONLY (DO NOT RUN)** — Activate only if testing confirms the original upstream v0.14 DLLs fail to load under SKSE 2.3.1.
 
 ---
@@ -15,156 +18,27 @@ Both plugins are open-source MIT C++ projects built on **`CommonLibSSE-NG`**. Co
 
 ---
 
-## 2. Upstream Repositories & Dependency Pinning
+## 2. Fork Repositories & Dependency Pinning
 
-| Component | Repository URL | License | Recommended Branch / Commit | Role |
+| Component | Fork Repository URL | License | Upstream Base | Target Scope |
 | :--- | :--- | :---: | :--- | :--- |
-| **`SKSE_HTTP`** | [`https://github.com/Leidtier/SKSE_HTTP`](https://github.com/Leidtier/SKSE_HTTP) | MIT | `master` (or tag `v0.1.0-beta9`) | Native HTTP client & dictionary container |
-| **`MantellaSubtitles`** | [`https://github.com/swwu/Mantella-Subtitles-Plugin-NG`](https://github.com/swwu/Mantella-Subtitles-Plugin-NG) | MIT | `main` | HUD subtitle rendering |
-| **`CommonLibSSE-NG`** | [`https://github.com/CharmedBaryon/CommonLibSSE-NG`](https://github.com/CharmedBaryon/CommonLibSSE-NG) | MIT | `master` (commit `d31a5c6` or newer) | Skyrim SE/AE reverse engineering library supporting Address Library v13 |
-| **Address Library** | Database version 13 | Meh321 | Header offset table for `1.7.104.0` | Runtime address resolution |
+| **`SKSE_HTTP`** | [`https://github.com/b1boi/SKSE_HTTP_sarkaar`](https://github.com/b1boi/SKSE_HTTP_sarkaar) | MIT | `Leidtier/SKSE_HTTP` | SE+AE multi-runtime HTTP client |
+| **`MantellaSubtitles`** | [`https://github.com/b1boi/Mantella-Subtitles-Plugin-sarkaar`](https://github.com/b1boi/Mantella-Subtitles-Plugin-sarkaar) | MIT | `swwu/Mantella-Subtitles-Plugin-NG` | SE+AE HUD subtitle display |
+| **`CommonLibSSE-NG`** | [`https://github.com/alandtse/CommonLibSSE-NG`](https://github.com/alandtse/CommonLibSSE-NG) | GPL-3.0+ | Branch `ng` (tracks modern AE point updates) | Address Library dynamic resolution |
+| **Address Library** | Database version 13 | Meh321 | Nexus Mods #32444 ("All in One 1.7.104.0") | Runtime address resolution |
 
 ---
 
-## 3. Toolchain & Build Requirements
+## 3. Workflow Specifications (`.github/workflows/build.yml`)
 
-- **Runner**: `windows-latest` (Windows Server 2022)
-- **Compiler**: Microsoft Visual C++ 2022 (`v143` toolchain, MSVC $\ge 19.38$)
-- **Windows SDK**: `10.0.22621.0` or newer
-- **C++ Standard**: C++20 (`/std:c++20`)
-- **CMake**: 3.25+ (pre-installed on runner)
-- **Build System**: Ninja or MSBuild
-- **Package Manager**: `vcpkg` (for `cpr` and `libcurl` in `SKSE_HTTP`)
+The production build workflow is maintained at [`.github/workflows/build.yml`](.github/workflows/build.yml). It adheres to strict reproducibility and security rules:
 
----
-
-## 4. Draft GitHub Actions Workflow
-
-Below is the complete standalone GitHub Actions workflow file. To activate, save this file to `.github/workflows/build_skse_plugins.yml` and trigger via `workflow_dispatch`:
-
-```yaml
-name: Build SKSE Plugins for Skyrim 1.7.104
-
-on:
-  workflow_dispatch:
-    inputs:
-      commonlib_ref:
-        description: 'CommonLibSSE-NG ref/branch'
-        required: true
-        default: 'master'
-
-jobs:
-  build-skse-http:
-    name: Build SKSE_HTTP.dll
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout SKSE_HTTP
-        uses: actions/checkout@v4
-        with:
-          repository: 'Leidtier/SKSE_HTTP'
-          submodules: 'recursive'
-          path: 'SKSE_HTTP'
-
-      - name: Set up MSVC Developer Command Prompt
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: 'x64'
-
-      - name: Setup Ninja
-        uses: ashley-tauro/ninja-build-action@v1.0.0
-
-      - name: Update CommonLibSSE-NG submodule
-        shell: pwsh
-        run: |
-          cd SKSE_HTTP/extern/CommonLibSSE-NG
-          git checkout ${{ github.event.inputs.commonlib_ref }}
-          git pull origin ${{ github.event.inputs.commonlib_ref }}
-
-      - name: Configure CMake
-        shell: pwsh
-        run: |
-          cmake -B SKSE_HTTP/build `
-                -S SKSE_HTTP `
-                -G "Visual Studio 17 2022" `
-                -A x64 `
-                -DCMAKE_BUILD_TYPE=Release `
-                -DENABLE_SKYRIM_AE=ON `
-                -DENABLE_SKYRIM_SE=ON
-
-      - name: Build SKSE_HTTP
-        shell: pwsh
-        run: |
-          cmake --build SKSE_HTTP/build --config Release --target SKSE_HTTP
-
-      - name: Upload SKSE_HTTP Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: SKSE_HTTP_1.7.104
-          path: SKSE_HTTP/build/Release/SKSE_HTTP.dll
-
-  build-mantella-subtitles:
-    name: Build MantellaSubtitles.dll
-    runs-on: windows-latest
-
-    steps:
-      - name: Checkout Mantella-Subtitles-Plugin-NG
-        uses: actions/checkout@v4
-        with:
-          repository: 'swwu/Mantella-Subtitles-Plugin-NG'
-          submodules: 'recursive'
-          path: 'MantellaSubtitles'
-
-      - name: Set up MSVC Developer Command Prompt
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: 'x64'
-
-      - name: Update CommonLibSSE-NG submodule
-        shell: pwsh
-        run: |
-          cd MantellaSubtitles/extern/CommonLibSSE-NG
-          git checkout ${{ github.event.inputs.commonlib_ref }}
-          git pull origin ${{ github.event.inputs.commonlib_ref }}
-
-      - name: Configure CMake
-        shell: pwsh
-        run: |
-          cmake -B MantellaSubtitles/build `
-                -S MantellaSubtitles `
-                -G "Visual Studio 17 2022" `
-                -A x64 `
-                -DCMAKE_BUILD_TYPE=Release
-
-      - name: Build MantellaSubtitles
-        shell: pwsh
-        run: |
-          cmake --build MantellaSubtitles/build --config Release
-
-      - name: Upload MantellaSubtitles Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: MantellaSubtitles_1.7.104
-          path: MantellaSubtitles/build/Release/MantellaSubtitles.dll
-```
-
----
-
-## 5. Artifact Verification & In-Game Deployment Procedure
-
-Once GitHub Actions finishes building:
-
-1. **Download Artifacts**: Download `SKSE_HTTP_1.7.104.zip` and `MantellaSubtitles_1.7.104.zip` from the GitHub Actions run summary.
-2. **Compute Hashes**:
-   ```bash
-   sha256sum SKSE_HTTP.dll MantellaSubtitles.dll
-   ```
-   Record hashes in `docs/phase0/dll_evidence.md`.
-3. **Deploy to Skyrim Data Directory**:
-   Copy the newly compiled DLLs into:
-   ```bash
-   <Skyrim Special Edition>/Data/SKSE/Plugins/
-   ```
-   (replacing the older v0.14 versions).
-4. **Inspect `skse64.log`**:
-   Launch Skyrim via SKSE64 under Proton and confirm both plugins load with status `loaded successfully`.
+1. **Trigger**: `workflow_dispatch` only (manual trigger; never triggers automatically on push).
+2. **Zero Secrets**: Requires no API keys, tokens, or repository secrets.
+3. **Commit SHA Pinning**: All GitHub Actions are pinned to full 40-character commit SHAs:
+   - `actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332` (v4.1.7)
+   - `ilammy/msvc-dev-cmd@cdc98472f2329188e8d893c5d648b2512f4fa9b4` (v1.13.0)
+   - `actions/upload-artifact@0b2256b8c012f0828dc542b3febcab082c67f72b` (v4.3.4)
+4. **CommonLibSSE-NG Inspection Step**: Outputs the exact `git rev-parse HEAD` and `git log -1` to the CI console for verifiable build provenance.
+5. **Multi-Target Configuration**: Configures `-DENABLE_SKYRIM_SE=ON -DENABLE_SKYRIM_AE=ON -DENABLE_SKYRIM_VR=OFF` (VR target disabled).
+6. **Artifact & Hash Packaging**: Calculates SHA-256 checksums on Windows and uploads the compiled DLLs along with their `.sha256` files as workflow artifacts.
