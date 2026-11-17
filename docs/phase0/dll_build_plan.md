@@ -24,7 +24,7 @@ Both plugins are open-source MIT C++ projects built on **`CommonLibSSE-NG`**. Co
 | :--- | :--- | :---: | :--- | :--- |
 | **`SKSE_HTTP`** | [`https://github.com/b1boi/SKSE_HTTP_sarkaar`](https://github.com/b1boi/SKSE_HTTP_sarkaar) | MIT | `Leidtier/SKSE_HTTP` | SE+AE multi-runtime HTTP client |
 | **`MantellaSubtitles`** | [`https://github.com/b1boi/Mantella-Subtitles-Plugin-sarkaar`](https://github.com/b1boi/Mantella-Subtitles-Plugin-sarkaar) | MIT | `swwu/Mantella-Subtitles-Plugin-NG` | SE+AE HUD subtitle display |
-| **`CommonLibSSE-NG`** | [`https://github.com/alandtse/CommonLibSSE-NG`](https://github.com/alandtse/CommonLibSSE-NG) | GPL-3.0+ | Branch `ng` (tracks modern AE point updates) | Address Library dynamic resolution |
+| **`CommonLibSSE-NG`** | [`https://github.com/alandtse/CommonLibSSE-NG`](https://github.com/alandtse/CommonLibSSE-NG) | GPL-3.0+ | Commit `07262cc2ae75777a422ed0c9621310fadef7c382` (tag `v15.7.3`) | Address Library dynamic resolution |
 | **Address Library** | Database version 13 | Meh321 | Nexus Mods #32444 ("All in One 1.7.104.0") | Runtime address resolution |
 
 ---
