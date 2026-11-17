@@ -1,0 +1,124 @@
+name: Rebuild SKSE Plugins (Option A)
+
+# Draft build workflow for b1boi forks of SKSE_HTTP and Mantella-Subtitles-Plugin-NG.
+# Targets multi-version Skyrim (SE 1.5.97, AE 1.6.x, AE 1.7.104) via CommonLibSSE-NG.
+# STATUS: DRAFT ONLY - DO NOT RUN AUTOMATICALLY (Triggered via workflow_dispatch only).
+
+on:
+  workflow_dispatch:
+    inputs:
+      skse_http_repo:
+        description: 'SKSE_HTTP repository (fork under github.com/b1boi)'
+        required: true
+        default: 'b1boi/SKSE_HTTP'
+      subtitles_repo:
+        description: 'MantellaSubtitles repository (fork under github.com/b1boi)'
+        required: true
+        default: 'b1boi/Mantella-Subtitles-Plugin-NG'
+      commonlib_branch:
+        description: 'CommonLibSSE-NG branch/tag (with 1.7.104 Address Library v13 support)'
+        required: true
+        default: 'master'
+
+jobs:
+  build-skse-http:
+    name: Build Multi-Runtime SKSE_HTTP.dll
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout SKSE_HTTP Fork
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.inputs.skse_http_repo }}
+          submodules: 'recursive'
+          path: 'SKSE_HTTP'
+
+      - name: Set up MSVC Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: 'x64'
+
+      - name: Setup Ninja
+        uses: ashley-tauro/ninja-build-action@v1.0.0
+
+      - name: Update CommonLibSSE-NG Submodule
+        shell: pwsh
+        run: |
+          cd SKSE_HTTP/extern/CommonLibSSE-NG
+          git checkout ${{ github.event.inputs.commonlib_branch }}
+          git pull origin ${{ github.event.inputs.commonlib_branch }}
+
+      - name: Configure CMake (Multi-Runtime Target)
+        shell: pwsh
+        run: |
+          cmake -B SKSE_HTTP/build `
+                -S SKSE_HTTP `
+                -G "Ninja" `
+                -DCMAKE_BUILD_TYPE=Release `
+                -DENABLE_SKYRIM_SE=ON `
+                -DENABLE_SKYRIM_AE=ON `
+                -DENABLE_SKYRIM_VR=ON
+
+      - name: Build SKSE_HTTP
+        shell: pwsh
+        run: |
+          cmake --build SKSE_HTTP/build --config Release
+
+      - name: Upload SKSE_HTTP.dll
+        uses: actions/upload-artifact@v4
+        with:
+          name: SKSE_HTTP-MultiTarget
+          path: |
+            SKSE_HTTP/build/SKSE_HTTP.dll
+            SKSE_HTTP/build/Release/SKSE_HTTP.dll
+
+  build-mantella-subtitles:
+    name: Build Multi-Runtime MantellaSubtitles.dll
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout Mantella-Subtitles Fork
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.inputs.subtitles_repo }}
+          submodules: 'recursive'
+          path: 'MantellaSubtitles'
+
+      - name: Set up MSVC Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: 'x64'
+
+      - name: Setup Ninja
+        uses: ashley-tauro/ninja-build-action@v1.0.0
+
+      - name: Update CommonLibSSE-NG Submodule
+        shell: pwsh
+        run: |
+          cd MantellaSubtitles/extern/CommonLibSSE-NG
+          git checkout ${{ github.event.inputs.commonlib_branch }}
+          git pull origin ${{ github.event.inputs.commonlib_branch }}
+
+      - name: Configure CMake (Multi-Runtime Target)
+        shell: pwsh
+        run: |
+          cmake -B MantellaSubtitles/build `
+                -S MantellaSubtitles `
+                -G "Ninja" `
+                -DCMAKE_BUILD_TYPE=Release `
+                -DENABLE_SKYRIM_SE=ON `
+                -DENABLE_SKYRIM_AE=ON `
+                -DENABLE_SKYRIM_VR=ON
+
+      - name: Build MantellaSubtitles
+        shell: pwsh
+        run: |
+          cmake --build MantellaSubtitles/build --config Release
+
+      - name: Upload MantellaSubtitles.dll
+        uses: actions/upload-artifact@v4
+        with:
+          name: MantellaSubtitles-MultiTarget
+          path: |
+            MantellaSubtitles/build/MantellaSubtitles.dll
+            MantellaSubtitles/build/Release/MantellaSubtitles.dll

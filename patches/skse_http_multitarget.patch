@@ -1,0 +1,51 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 1a2b3c4..5d6e7f8 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -1,15 +1,24 @@
+ cmake_minimum_required(VERSION 3.25)
+ project(SKSE_HTTP VERSION 0.1.0 LANGUAGES CXX)
+ 
++set(CMAKE_CXX_STANDARD 20)
++set(CMAKE_CXX_STANDARD_REQUIRED ON)
++
++# Multi-runtime Skyrim support via CommonLibSSE-NG and Address Library
++set(ENABLE_SKYRIM_SE ON CACHE BOOL "Enable Skyrim SE 1.5.97 support" FORCE)
++set(ENABLE_SKYRIM_AE ON CACHE BOOL "Enable Skyrim AE 1.6.x and 1.7.x support" FORCE)
++set(ENABLE_SKYRIM_VR ON CACHE BOOL "Enable Skyrim VR support" FORCE)
++
+ add_subdirectory(extern/CommonLibSSE-NG)
+ 
+ add_library(${PROJECT_NAME} SHARED
+     src/main.cpp
+     src/PCH.h
++    src/HttpManager.cpp
+ )
+ 
+ target_include_directories(${PROJECT_NAME} PRIVATE
+     src
+ )
+ 
+-target_link_libraries(${PROJECT_NAME} PRIVATE CommonLibSSE::CommonLibSSE cpr::cpr)
++target_link_libraries(${PROJECT_NAME} PRIVATE CommonLibSSE::CommonLibSSE)
+diff --git a/src/main.cpp b/src/main.cpp
+index 2b3c4d5..6e7f8a9 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -10,12 +10,13 @@
+ 
+ extern "C" [[maybe_unused]] __declspec(dllexport) SKSE::PluginVersionData SKSEPlugin_Version = []() noexcept {
+     SKSE::PluginVersionData v;
+-    v.PluginVersion(Plugin::VERSION);
+-    v.PluginName(Plugin::NAME);
+-    v.AuthorName(Plugin::AUTHOR);
+-    v.CompatibleVersions({ SKSE::RUNTIME_1_6_1170 });
++    v.PluginVersion({ 0, 1, 0, 0 });
++    v.PluginName("SKSE_HTTP");
++    v.AuthorName("b1boi");
++    v.UsesAddressLibrary();
++    v.UsesNoStructs();
+     return v;
+ }();
+ 
+ SKSEPluginLoad(const SKSE::LoadInterface* a_skse) {
