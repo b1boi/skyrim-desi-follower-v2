@@ -45,7 +45,7 @@ jobs:
 
       - name: Set up MSVC Environment
         # ilammy/msvc-dev-cmd@v1.13.0 (pinned by commit SHA)
-        uses: ilammy/msvc-dev-cmd@cdc98472f2329188e8d893c5d648b2512f4fa9b4
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756
         with:
           arch: 'x64'
 
@@ -115,7 +115,7 @@ jobs:
 
       - name: Set up MSVC Environment
         # ilammy/msvc-dev-cmd@v1.13.0 (pinned by commit SHA)
-        uses: ilammy/msvc-dev-cmd@cdc98472f2329188e8d893c5d648b2512f4fa9b4
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756
         with:
           arch: 'x64'
 
