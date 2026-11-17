@@ -54,7 +54,7 @@ jobs:
         run: |
           cmake -B SKSE_HTTP/build `
                 -S SKSE_HTTP `
-                -G "Visual Studio 17 2022" `
+                -G "Visual Studio 18 2026" `
                 -A x64 `
                 -DCMAKE_BUILD_TYPE=Release `
                 -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" `
@@ -124,7 +124,7 @@ jobs:
         run: |
           cmake -B MantellaSubtitles/build `
                 -S MantellaSubtitles `
-                -G "Visual Studio 17 2022" `
+                -G "Visual Studio 18 2026" `
                 -A x64 `
                 -DCMAKE_BUILD_TYPE=Release `
                 -DCMAKE_TOOLCHAIN_FILE="$env:VCPKG_INSTALLATION_ROOT/scripts/buildsystems/vcpkg.cmake" `
