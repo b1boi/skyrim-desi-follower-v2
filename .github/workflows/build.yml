@@ -19,7 +19,7 @@ on:
       skse_http_ref:
         description: 'SKSE_HTTP commit SHA or branch'
         required: true
-        default: '6915c1198031493201d43aa137af646b6a6bffa6'
+        default: '2056bbdcb0c88a96a24c1a84be8d441a0dbf862d'
       subtitles_repo:
         description: 'MantellaSubtitles fork repository'
         required: true
@@ -27,7 +27,7 @@ on:
       subtitles_ref:
         description: 'MantellaSubtitles commit SHA or branch'
         required: true
-        default: 'a25adcc37f3e7f597893231425486d71fc087868'
+        default: '782768b46e1680aef56e98b47841fb9bff52a582'
 
 jobs:
   build-skse-http:
@@ -77,7 +77,13 @@ jobs:
       - name: Compile SKSE_HTTP
         shell: pwsh
         run: |
-          cmake --build SKSE_HTTP/build --config Release
+          cmake --build SKSE_HTTP/build --config Release *>&1 | Tee-Object -FilePath build.log
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=================== BUILD ERRORS (FIRST 30) ==================="
+            Select-String -Path build.log -Pattern "error" -CaseSensitive:$false | Select-Object -First 30 | ForEach-Object { $_.Line }
+            Write-Host "================================================================"
+            exit $LASTEXITCODE
+          }
 
       - name: Package Artifacts & Calculate Hashes
         shell: pwsh
@@ -147,7 +153,13 @@ jobs:
       - name: Compile MantellaSubtitles
         shell: pwsh
         run: |
-          cmake --build MantellaSubtitles/build --config Release
+          cmake --build MantellaSubtitles/build --config Release *>&1 | Tee-Object -FilePath build.log
+          if ($LASTEXITCODE -ne 0) {
+            Write-Host "=================== BUILD ERRORS (FIRST 30) ==================="
+            Select-String -Path build.log -Pattern "error" -CaseSensitive:$false | Select-Object -First 30 | ForEach-Object { $_.Line }
+            Write-Host "================================================================"
+            exit $LASTEXITCODE
+          }
 
       - name: Package Artifacts & Calculate Hashes
         shell: pwsh
