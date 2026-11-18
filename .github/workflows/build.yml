@@ -19,7 +19,7 @@ on:
       skse_http_ref:
         description: 'SKSE_HTTP commit SHA or branch'
         required: true
-        default: '7061595a26fe3fd0bc9947d273437c0c6882ee4a'
+        default: '6915c1198031493201d43aa137af646b6a6bffa6'
       subtitles_repo:
         description: 'MantellaSubtitles fork repository'
         required: true
@@ -27,7 +27,7 @@ on:
       subtitles_ref:
         description: 'MantellaSubtitles commit SHA or branch'
         required: true
-        default: '8767a0825c46759a5054e09ec4a70f7bec0791bc'
+        default: 'a25adcc37f3e7f597893231425486d71fc087868'
 
 jobs:
   build-skse-http:
